@@ -138,6 +138,59 @@ The Caddyfile includes an HTTP catch-all on port 80 so you do not need `:3000` f
 
 ---
 
+## Install & run on a fresh Ubuntu 24.04 VM (Google Cloud) — A→Z
+
+This section shows how to install the app manually on a new Ubuntu 24.04 VM and run it on the
+server public IP using port 80 (no `:3000`).
+
+### 1) Create the VM + open ports
+- Create a Google Compute Engine VM (Ubuntu 24.04).
+- Allow inbound **TCP 80/443** in the VM firewall rules.
+
+### 2) SSH into the VM and bootstrap
+```bash
+ssh deploy@YOUR_SERVER_IP
+```
+Then run:
+```bash
+cd ~
+curl -fsSL https://raw.githubusercontent.com/mustafanetl/t-agent/main/server/bootstrap_ubuntu.sh -o bootstrap_ubuntu.sh
+chmod +x bootstrap_ubuntu.sh
+./bootstrap_ubuntu.sh
+```
+The script installs required packages, Docker (if needed), and clones the repo into `~/apps/t-agent`.
+
+### 3) Configure environment variables
+```bash
+cd ~/apps/t-agent
+cp .env.example .env
+nano .env
+```
+Set production values. Minimum to boot:
+- `DATABASE_URL`
+- `NEXTAUTH_URL` (use your public domain when ready)
+- `AUTH_SECRET`
+
+### 4) Start the stack on port 80
+```bash
+docker compose up -d --build
+```
+Caddy listens on ports 80/443 and proxies to the app, so you can open:
+```
+http://YOUR_SERVER_IP
+```
+
+### 5) Run migrations + seed
+```bash
+./scripts/migrate.sh
+```
+
+### 6) Optional: Use HTTPS with your domain later
+Once DNS points to the VM, Caddy will auto-provision HTTPS for `arzum.ai` and `www.arzum.ai`.
+
+### Troubleshooting
+- **Port 80 not reachable:** ensure GCP firewall allows TCP 80 and your VM has no local firewall blocking it.
+- **Docker permission denied:** run `newgrp docker` or log out/in after the bootstrap script.
 ## GitHub Actions auto-deploy
 
 ### 1) Server deploy script
