@@ -29,23 +29,13 @@ if [[ ! -d "$HOME/apps/t-agent/.git" ]]; then
   git clone https://github.com/mustafanetl/t-agent.git "$HOME/apps/t-agent"
 fi
 
-# Prepare SSH directory and permissions.
-mkdir -p "$HOME/.ssh"
-chmod 700 "$HOME/.ssh"
-touch "$HOME/.ssh/authorized_keys"
-chmod 600 "$HOME/.ssh/authorized_keys"
-
 cat <<'INSTRUCTIONS'
 
 Next steps:
-1) Add YOUR public key to ~/.ssh/authorized_keys on this VM:
-   - Use: nano ~/.ssh/authorized_keys
-   - Paste the public key from your laptop.
-
-2) Create a deploy script on the VM if you want to override defaults:
+1) Create a deploy script on the VM if you want to override defaults:
    - ~/apps/t-agent/server/deploy.sh
    - Or symlink: ln -s ~/apps/t-agent/server/deploy.sh ~/apps/t-agent/deploy.sh
 
-3) For Docker deployments, log out/in (or run: newgrp docker) to apply group changes.
+2) For Docker deployments, log out/in (or run: newgrp docker) to apply group changes.
 
 INSTRUCTIONS
