@@ -122,6 +122,12 @@ Caddy will automatically obtain SSL certs. Visit:
 https://arzum.ai
 ```
 
+If you are validating via public IP before DNS is ready, you can visit:
+```
+http://<SERVER_PUBLIC_IP>
+```
+The Caddyfile includes an HTTP catch-all on port 80 so you do not need `:3000` for this check.
+
 ---
 
 ## Stripe webhook setup
@@ -135,6 +141,10 @@ https://arzum.ai
 ## GitHub Actions auto-deploy
 
 ### 1) Server deploy script
+Use `server/deploy.sh` on the VM (or the root `deploy.sh` wrapper). It will:
+- pull latest code
+- run `docker compose up -d --build` when a compose file is present
+- otherwise run `npm ci` + `npm run build` (and expects you to wire a restart command)
 `./scripts/deploy.sh` will:
 - pull latest code
 - rebuild containers
@@ -147,6 +157,70 @@ In GitHub → **Settings → Secrets and variables → Actions**, add:
 - `SERVER_SSH_KEY`
 
 ### 3) Workflow
+The workflow is in `.github/workflows/deploy.yml`, runs on every push to `main`, and executes:
+```
+bash ~/apps/t-agent/deploy.sh
+```
+
+---
+
+## Auto-deploy from GitHub to Google Cloud (A→Z)
+
+Follow these exact steps to set up SSH-based deployments from GitHub Actions.
+
+### 1) On your laptop: create a deploy key
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/arzum_actions
+```
+
+### 2) On the VM (as `deploy`): create SSH directory and authorized_keys
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+Then paste the public key from your laptop into `~/.ssh/authorized_keys`:
+```bash
+nano ~/.ssh/authorized_keys
+```
+
+### 3) Add GitHub secrets
+In GitHub → **Settings → Secrets and variables → Actions**, add:
+- `SERVER_HOST=35.246.230.74`
+- `SERVER_USER=deploy`
+- `SERVER_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUgAAAJgJ6FUzCehV
+MwAAAAtzc2gtZWQyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUg
+AAAECWsY+7H6s6RSzdq1EKVLhRyH3evqG2LiIJ5vxr+wNHUiAysNZNDpfDRIm/+OQY34L+
+bg73oIq9lFi4HoqhhgZSAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----`
+
+### 4) Prepare the VM repo and deploy script
+```bash
+mkdir -p ~/apps
+git clone https://github.com/mustafanetl/t-agent.git ~/apps/t-agent
+ln -s ~/apps/t-agent/server/deploy.sh ~/apps/t-agent/deploy.sh
+```
+
+### 5) Commit and push the workflow
+```bash
+git add .github/workflows/deploy.yml
+git commit -m "Add GitHub Actions deploy workflow"
+git push origin main
+```
+
+### 6) Trigger a test deploy
+Push any commit to `main`, then watch **GitHub Actions → Deploy**. The workflow will run:
+```bash
+bash ~/apps/t-agent/deploy.sh
+```
+
+### 7) Troubleshooting
+- **Permission denied (publickey):** confirm the public key is in `~/.ssh/authorized_keys` on the VM and the GitHub secret uses the matching private key.
+- **Host key verification failed:** SSH into the VM once from your laptop to accept the host key.
+- **Docker permission denied:** run `newgrp docker` or log out/in after `usermod -aG docker deploy`.
 The workflow is in `.github/workflows/deploy.yml` and runs on every push to `main`.
 
 ---

@@ -15,5 +15,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            bash ~/apps/t-agent/deploy.sh
             cd /var/www/arzum-ai
             ./scripts/deploy.sh
