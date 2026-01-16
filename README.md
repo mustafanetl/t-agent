@@ -141,10 +141,10 @@ The Caddyfile includes an HTTP catch-all on port 80 so you do not need `:3000` f
 ## GitHub Actions auto-deploy
 
 ### 1) Server deploy script
-`./scripts/deploy.sh` will:
+Use `server/deploy.sh` on the VM (or the root `deploy.sh` wrapper). It will:
 - pull latest code
-- rebuild containers
-- run migrations + seed
+- run `docker compose up -d --build` when a compose file is present
+- otherwise run `npm ci` + `npm run build` (and expects you to wire a restart command)
 
 ### 2) Add repo secrets
 In GitHub → **Settings → Secrets and variables → Actions**, add:
