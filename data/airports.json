@@ -1,0 +1,22 @@
+[
+  { "iata": "LHR", "city": "London", "country": "United Kingdom", "lat": 51.4706, "lng": -0.4619 },
+  { "iata": "LGW", "city": "London", "country": "United Kingdom", "lat": 51.1537, "lng": -0.1821 },
+  { "iata": "CDG", "city": "Paris", "country": "France", "lat": 49.0097, "lng": 2.5479 },
+  { "iata": "ORY", "city": "Paris", "country": "France", "lat": 48.7262, "lng": 2.3652 },
+  { "iata": "AMS", "city": "Amsterdam", "country": "Netherlands", "lat": 52.3105, "lng": 4.7683 },
+  { "iata": "FRA", "city": "Frankfurt", "country": "Germany", "lat": 50.0379, "lng": 8.5622 },
+  { "iata": "MUC", "city": "Munich", "country": "Germany", "lat": 48.3538, "lng": 11.7861 },
+  { "iata": "MAD", "city": "Madrid", "country": "Spain", "lat": 40.4893, "lng": -3.5676 },
+  { "iata": "BCN", "city": "Barcelona", "country": "Spain", "lat": 41.2974, "lng": 2.0833 },
+  { "iata": "LIS", "city": "Lisbon", "country": "Portugal", "lat": 38.7742, "lng": -9.1342 },
+  { "iata": "DUB", "city": "Dublin", "country": "Ireland", "lat": 53.4213, "lng": -6.2701 },
+  { "iata": "CPH", "city": "Copenhagen", "country": "Denmark", "lat": 55.6181, "lng": 12.656 },
+  { "iata": "ARN", "city": "Stockholm", "country": "Sweden", "lat": 59.6519, "lng": 17.9186 },
+  { "iata": "OSL", "city": "Oslo", "country": "Norway", "lat": 60.1939, "lng": 11.1004 },
+  { "iata": "HEL", "city": "Helsinki", "country": "Finland", "lat": 60.3172, "lng": 24.9633 },
+  { "iata": "VIE", "city": "Vienna", "country": "Austria", "lat": 48.1103, "lng": 16.5697 },
+  { "iata": "ZRH", "city": "Zurich", "country": "Switzerland", "lat": 47.4581, "lng": 8.5555 },
+  { "iata": "FCO", "city": "Rome", "country": "Italy", "lat": 41.7999, "lng": 12.2462 },
+  { "iata": "MXP", "city": "Milan", "country": "Italy", "lat": 45.6301, "lng": 8.7255 },
+  { "iata": "ATH", "city": "Athens", "country": "Greece", "lat": 37.9364, "lng": 23.9445 }
+]
