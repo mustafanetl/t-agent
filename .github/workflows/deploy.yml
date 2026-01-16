@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 35.246.230.74
+          username: deploy
+          key: -----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUgAAAJgJ6FUzCehV
+MwAAAAtzc2gtZWQyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUg
+AAAECWsY+7H6s6RSzdq1EKVLhRyH3evqG2LiIJ5vxr+wNHUiAysNZNDpfDRIm/+OQY34L+
+bg73oIq9lFi4HoqhhgZSAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----
+          script: |
+            bash ~/apps/t-agent/deploy.sh
+            cd /var/www/arzum-ai
+            ./scripts/deploy.sh

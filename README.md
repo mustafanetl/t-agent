@@ -1,4 +1,4 @@
-# AI trip planner & Europe flight-deals map
+# arzum.ai — AI trip planner & Europe flight-deals map
 
 Production-ready Next.js 14 app with Mapbox, Prisma, Stripe subscriptions, Resend email alerts, and a Gemini-powered itinerary planner.
 
@@ -78,11 +78,11 @@ newgrp docker
 
 ### 3) Clone repo
 ```bash
-sudo mkdir -p /var/www/t-agent
-sudo chown $USER:$USER /var/www/t-agent
-cd /var/www/t-agent
+sudo mkdir -p /var/www/arzum-ai
+sudo chown $USER:$USER /var/www/arzum-ai
+cd /var/www/arzum-ai
 
-git clone https://github.com/mustafanetl/t-agent.git .
+git clone https://github.com/YOUR_ORG/arzum-ai.git .
 ```
 
 ### 4) Add `.env`
@@ -92,31 +92,49 @@ nano .env
 ```
 Fill in production values (Stripe, Resend, Gemini, Mapbox, etc.).
 
-### 5) Start services
+### 5) Configure DNS
+Add A records for:
+- `arzum.ai` → VM external IP
+- `www.arzum.ai` → VM external IP
+
+### 6) Start services
 ```bash
 docker compose up -d --build
 ```
 
-### 6) Run migrations + seed
+### 7) Run migrations + seed
 ```bash
 ./scripts/migrate.sh
 ```
 
-### 7) Verify HTTP on the VM IP (port 80)
-Visit the app via the VM public IP:
+### 8) Set Stripe webhook endpoint
+Add a webhook in Stripe:
 ```
-http://35.246.230.74
+https://arzum.ai/api/stripe/webhook
 ```
-The Caddyfile listens on port 80 so you do not need `:3000`.
+Listen for:
+- `checkout.session.completed`
+- `customer.subscription.deleted`
+
+### 9) Verify HTTPS
+Caddy will automatically obtain SSL certs. Visit:
+```
+https://arzum.ai
+```
+
+If you are validating via public IP before DNS is ready, you can visit:
+```
+http://<SERVER_PUBLIC_IP>
+```
+The Caddyfile includes an HTTP catch-all on port 80 so you do not need `:3000` for this check.
 
 ---
 
 ## Stripe webhook setup
 
 1. Go to **Stripe Dashboard → Developers → Webhooks**.
-2. This requires a domain + HTTPS. If you are running on IP only, skip webhook setup for now.
-3. When ready, add endpoint: `https://YOUR_DOMAIN/api/stripe/webhook`.
-4. Copy the webhook secret into `.env` as `STRIPE_WEBHOOK_SECRET`.
+2. Add endpoint: `https://arzum.ai/api/stripe/webhook`.
+3. Copy the webhook secret into `.env` as `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
@@ -150,7 +168,7 @@ nano .env
 ```
 Set production values. Minimum to boot:
 - `DATABASE_URL`
-- `NEXTAUTH_URL` (set to your VM IP, e.g. `http://35.246.230.74`)
+- `NEXTAUTH_URL` (use your public domain when ready)
 - `AUTH_SECRET`
 
 ### 4) Start the stack on port 80
@@ -167,9 +185,96 @@ http://YOUR_SERVER_IP
 ./scripts/migrate.sh
 ```
 
+### 6) Optional: Use HTTPS with your domain later
+Once DNS points to the VM, Caddy will auto-provision HTTPS for `arzum.ai` and `www.arzum.ai`.
+
 ### Troubleshooting
 - **Port 80 not reachable:** ensure GCP firewall allows TCP 80 and your VM has no local firewall blocking it.
 - **Docker permission denied:** run `newgrp docker` or log out/in after the bootstrap script.
+## GitHub Actions auto-deploy
+
+### 1) Server deploy script
+Use `server/deploy.sh` on the VM (or the root `deploy.sh` wrapper). It will:
+- pull latest code
+- run `docker compose up -d --build` when a compose file is present
+- otherwise run `npm ci` + `npm run build` (and expects you to wire a restart command)
+`./scripts/deploy.sh` will:
+- pull latest code
+- rebuild containers
+- run migrations + seed
+
+### 2) Add repo secrets
+In GitHub → **Settings → Secrets and variables → Actions**, add:
+- `SERVER_HOST`
+- `SERVER_USER`
+- `SERVER_SSH_KEY`
+
+### 3) Workflow
+The workflow is in `.github/workflows/deploy.yml`, runs on every push to `main`, and executes:
+```
+bash ~/apps/t-agent/deploy.sh
+```
+
+---
+
+## Auto-deploy from GitHub to Google Cloud (A→Z)
+
+Follow these exact steps to set up SSH-based deployments from GitHub Actions.
+
+### 1) On your laptop: create a deploy key
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/arzum_actions
+```
+
+### 2) On the VM (as `deploy`): create SSH directory and authorized_keys
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+Then paste the public key from your laptop into `~/.ssh/authorized_keys`:
+```bash
+nano ~/.ssh/authorized_keys
+```
+
+### 3) Add GitHub secrets
+In GitHub → **Settings → Secrets and variables → Actions**, add:
+- `SERVER_HOST=35.246.230.74`
+- `SERVER_USER=deploy`
+- `SERVER_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUgAAAJgJ6FUzCehV
+MwAAAAtzc2gtZWQyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUg
+AAAECWsY+7H6s6RSzdq1EKVLhRyH3evqG2LiIJ5vxr+wNHUiAysNZNDpfDRIm/+OQY34L+
+bg73oIq9lFi4HoqhhgZSAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----`
+
+### 4) Prepare the VM repo and deploy script
+```bash
+mkdir -p ~/apps
+git clone https://github.com/mustafanetl/t-agent.git ~/apps/t-agent
+ln -s ~/apps/t-agent/server/deploy.sh ~/apps/t-agent/deploy.sh
+```
+
+### 5) Commit and push the workflow
+```bash
+git add .github/workflows/deploy.yml
+git commit -m "Add GitHub Actions deploy workflow"
+git push origin main
+```
+
+### 6) Trigger a test deploy
+Push any commit to `main`, then watch **GitHub Actions → Deploy**. The workflow will run:
+```bash
+bash ~/apps/t-agent/deploy.sh
+```
+
+### 7) Troubleshooting
+- **Permission denied (publickey):** confirm the public key is in `~/.ssh/authorized_keys` on the VM and the GitHub secret uses the matching private key.
+- **Host key verification failed:** SSH into the VM once from your laptop to accept the host key.
+- **Docker permission denied:** run `newgrp docker` or log out/in after `usermod -aG docker deploy`.
+The workflow is in `.github/workflows/deploy.yml` and runs on every push to `main`.
 
 ---
 
