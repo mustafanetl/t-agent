@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  passwordHash         String
+  isPremium            Boolean  @default(false)
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  searches             Search[]
+  alerts               Alert[]
+  createdAt            DateTime @default(now())
+}
+
+model Airport {
+  id      String  @id @default(cuid())
+  iata    String  @unique
+  city    String
+  country String
+  lat     Float
+  lng     Float
+}
+
+model Search {
+  id         String   @id @default(cuid())
+  userId     String
+  origins    String[]
+  tripLength String
+  departFrom String?
+  departTo   String?
+  budget     Int
+  vibeTags   String[]
+  partyType  String
+  createdAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  alerts Alert[]
+}
+
+model Deal {
+  id            String   @id @default(cuid())
+  destination   String
+  minPrice      Int
+  currency      String
+  provider      String
+  deepLink      String
+  departFrom    String
+  departTo      String
+  lastUpdatedAt DateTime @default(now())
+  payloadJson   Json
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  userId      String
+  searchId    String
+  triggeredAt DateTime @default(now())
+  oldPrice    Int
+  newPrice    Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  search Search @relation(fields: [searchId], references: [id])
+}
