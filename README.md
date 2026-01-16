@@ -145,6 +145,10 @@ Use `server/deploy.sh` on the VM (or the root `deploy.sh` wrapper). It will:
 - pull latest code
 - run `docker compose up -d --build` when a compose file is present
 - otherwise run `npm ci` + `npm run build` (and expects you to wire a restart command)
+`./scripts/deploy.sh` will:
+- pull latest code
+- rebuild containers
+- run migrations + seed
 
 ### 2) Add repo secrets
 In GitHub → **Settings → Secrets and variables → Actions**, add:
@@ -185,7 +189,13 @@ nano ~/.ssh/authorized_keys
 In GitHub → **Settings → Secrets and variables → Actions**, add:
 - `SERVER_HOST=35.246.230.74`
 - `SERVER_USER=deploy`
-- `SERVER_SSH_KEY=PASTE_YOUR_PRIVATE_KEY_HERE`
+- `SERVER_SSH_KEY=-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUgAAAJgJ6FUzCehV
+MwAAAAtzc2gtZWQyNTUxOQAAACAgMrDWTQ6Xw0SJv/jkGN+C/m4O96CKvZRYuB6KoYYGUg
+AAAECWsY+7H6s6RSzdq1EKVLhRyH3evqG2LiIJ5vxr+wNHUiAysNZNDpfDRIm/+OQY34L+
+bg73oIq9lFi4HoqhhgZSAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----`
 
 ### 4) Prepare the VM repo and deploy script
 ```bash
@@ -211,6 +221,7 @@ bash ~/apps/t-agent/deploy.sh
 - **Permission denied (publickey):** confirm the public key is in `~/.ssh/authorized_keys` on the VM and the GitHub secret uses the matching private key.
 - **Host key verification failed:** SSH into the VM once from your laptop to accept the host key.
 - **Docker permission denied:** run `newgrp docker` or log out/in after `usermod -aG docker deploy`.
+The workflow is in `.github/workflows/deploy.yml` and runs on every push to `main`.
 
 ---
 
